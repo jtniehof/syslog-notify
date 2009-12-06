@@ -64,6 +64,58 @@ void SendMessage(const char* title,const char* message) {
   g_object_unref(notification);
 }
 
+/*Copy a string from in to out (max count characters)
+ *Perform any necessary translations (filtering bad
+ *characters, entifying HTML)
+ */
+void Sanitize(char* out,const char* in,size_t count) {
+  strncpy(out,in,count);
+}
+
+/*Parses a syslog line into a title and a message
+ *May destroy contents of line, which MUST be zero-terminated
+ */
+void ParseLine(char* line,
+	       char* out_title,int n_title,
+	       char* out_message,int n_message) {
+  char *start, *end, *title, *message;
+  start=line;
+  end=strchr(start,'\0');
+
+  /*Skip date, time, system name*/
+  if(end - start >= 16) {
+    title=start+16;
+    title=strchr(title,' ');
+    if(!title)
+      title=start;
+    else
+      title++;
+  }
+  else
+    title=start;
+  
+  if(title==start) { /*Can't parse the line, just display it*/
+    message=start;
+    title=APP_NAME;
+  }
+  else {
+    message=strchr(title,':');
+    if(!message) { /*Another "can't parse"*/
+      message=start;
+      title=APP_NAME;
+    }
+    else {
+      *message='\0';
+      message++;
+      while(message<end && *message==' ')
+	message++;
+    }
+  }
+
+  Sanitize(out_title,title,n_title);
+  Sanitize(out_message,message,n_message);
+}
+
 /*Processes a buffer of message(s) from syslog
  *Sends to the notification daemon
  *Input: pointer to the message buffer
@@ -72,8 +124,8 @@ void SendMessage(const char* title,const char* message) {
 void ProcessBuffer(char buffer[PIPE_BUF+1]) {
   /*Start/end of a line from syslog*/
   char *start, *end;
-  /*Start of message title, and message itself*/
-  char *title, *message;
+  /*Message title, and message itself*/
+  char title[PIPE_BUF+1], message[PIPE_BUF+1];
 
   start=buffer;
   do {
@@ -84,33 +136,9 @@ void ProcessBuffer(char buffer[PIPE_BUF+1]) {
     else
       end=strchr(start,'\0');
 
-    /*Skip date, time, system name*/
-    if(end - start >= 16) {
-      title=start+16;
-      title=strchr(title,' ');
-      if(!title)
-	title=start;
-      else
-	title++;
-    }
-    else
-      title=start;
-
-    if(title==start) { /*Can't parse the line, just display it*/
-      message=start;
-      title=APP_NAME;
-    }
-    else {
-      message=strchr(title,':');
-      if(!message) { /*Another "can't parse"*/
-	message=start;
-	title=APP_NAME;
-      }
-      else {
-	*message='\0';
-	message++;
-      }
-    }
+    ParseLine(start,title,PIPE_BUF,message,PIPE_BUF);
+    title[PIPE_BUF]='\0';
+    message[PIPE_BUF]='\0';
 
     SendMessage(title,message);
     start=end+1;
