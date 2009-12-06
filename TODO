@@ -4,4 +4,4 @@ Autoconfiscate
 
 Filter control characters, other "bad" from messages
 
-Actually quit when session exits (don't daemonize by default?)
+Remove daemonizing possibility?

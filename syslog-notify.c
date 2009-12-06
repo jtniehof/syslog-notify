@@ -46,7 +46,8 @@ void SendMessage(const char* title,const char* message) {
   GError *error=NULL;
 
   if(!notify_is_initted()) {
-    /*Should probably send something to syslog and terminate*/
+    /*Should probably send something to syslog before terminating*/
+    close(fd);
     return;
   }
   notification=notify_notification_new(title,message,NULL,NULL);
@@ -54,12 +55,14 @@ void SendMessage(const char* title,const char* message) {
   notify_notification_set_urgency(notification,NOTIFY_URGENCY_NORMAL);
   notify_notification_set_hint_string(notification,"x-canonical-append",
 				      "allowed");
-  notify_notification_show(notification,&error);
-  if(error) {
-    /*TODO: actually handle errors!
-     *human-readable message in error->message
-     */
-    g_error_free(error);
+  if(!notify_notification_show(notification,&error)) {
+    if(error) {
+      /*TODO: actually handle errors!
+       *human-readable message in error->message
+       */
+      g_error_free(error);
+    }
+    close(fd); /*Probably just want to quit*/
   }
   g_object_unref(notification);
 }
@@ -214,12 +217,13 @@ void ProcessBuffer(char buffer[PIPE_BUF+1]) {
 }
 
 /*Signal handler
- *Only handles TERM
+ *Only handles TERM, INT, HUP and exits for all of them
  */
 void handler(int sig) {
-
   switch(sig) {
   case SIGTERM:
+  case SIGINT:
+  case SIGHUP:
     close(fd);
     break;
   default:
@@ -299,6 +303,12 @@ int main(int argc, char* argv[]) {
   if(daemon) {
     signal(SIGINT,SIG_IGN);
     signal(SIGHUP,SIG_IGN);
+  }
+  else {
+    if(signal(SIGINT,handler) == SIG_IGN)
+      signal(SIGINT,SIG_IGN);
+    if(signal(SIGHUP,handler) == SIG_IGN)
+      signal(SIGHUP,SIG_IGN);
   }
 
   /*Set up syslog handling*/
