@@ -1,0 +1,8 @@
+Debianize
+
+Autoconfiscate
+
+Sanitize messages
+https://wiki.ubuntu.com/NotifyOSD#org.freedesktop.Notifications.GetCapabilities
+
+Actually quit when session exits (don't daemonize by default?)
