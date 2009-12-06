@@ -64,12 +64,80 @@ void SendMessage(const char* title,const char* message) {
   g_object_unref(notification);
 }
 
+/*Compare two strings for equality*/
+gint CompareStrings(gconstpointer a, gconstpointer b) {
+ /*No way to know for sure how long the string is, so just
+  *try to limit the damage if there's no terminator
+  */
+  return strncmp(a,b,15);
+}
+
+/*Converts <, >, & in a string to HTML entities*/
+void Entify(char* out,const char* in, size_t count) {
+  const char *curr_in, *last_char;
+  char* curr_out;
+
+  last_char=out+count-1;
+
+  for(curr_out=out,curr_in=in;
+      curr_out<=last_char && *curr_in;
+      curr_in++,curr_out++)
+    switch(*curr_in) {
+    case '<':
+      if(curr_out+3<=last_char) {
+	strncpy(curr_out,"&lt;",4);
+	curr_out+=3;
+      }
+      else
+	curr_out='\0';
+      break;
+    case '>':
+      if(curr_out+3<=last_char) {
+	strncpy(curr_out,"&gt;",4);
+	curr_out+=3;
+      }
+      else
+	curr_out='\0';
+      break;
+    case '&':
+      if(curr_out+4<=last_char) {
+	strncpy(curr_out,"&amp;",5);
+	curr_out+=4;
+      }
+      else
+	curr_out='\0';
+      break;
+    default:
+      *curr_out=*curr_in;
+    }
+
+  if(curr_out<last_char)
+    *curr_out='\0';
+}
+
 /*Copy a string from in to out (max count characters)
  *Perform any necessary translations (filtering bad
  *characters, entifying HTML)
  */
 void Sanitize(char* out,const char* in,size_t count) {
-  strncpy(out,in,count);
+  GList *caps;
+  static int filter_html=-1;
+
+  if(filter_html<0) {
+    filter_html=0; /*Assume server doesn't handle markup*/
+    caps=notify_get_server_caps();
+    if(caps) {
+      if(g_list_find_custom(caps,"body-markup",(GCompareFunc)CompareStrings))
+	 filter_html=1;
+      g_list_foreach(caps, (GFunc)g_free, NULL);
+      g_list_free(caps);
+    }
+  }
+
+  if(filter_html)
+    Entify(out,in,count);
+  else
+    strncpy(out,in,count);
 }
 
 /*Parses a syslog line into a title and a message
