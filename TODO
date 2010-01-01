@@ -1,7 +1,5 @@
 Debianize
 
-Autoconfiscate
-
 Filter control characters, other "bad" from messages
 
 Remove daemonizing possibility?

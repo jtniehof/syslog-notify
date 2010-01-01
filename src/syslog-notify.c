@@ -3,6 +3,7 @@
  *Jonathan Niehof, 29 November 2009
  */
 
+#include <config.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
