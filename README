@@ -1,0 +1,49 @@
+syslog-notify 0.1
+=================
+
+As the name implies, syslog-notify takes messages from the syslog logging
+facility and channels them to the freedesktop.org notification system
+(http://www.galago-project.org/). A user at the X console thus has timely
+notification, ordinarily via pop-up message bubbles, of interesting events
+in the logs. Some may recognize the similarity of purpose with xconsole.
+Indeed some of the same facilities are used, but the end result is quite
+different.
+
+The syslog-notify project exists to produce a utility that, using standard
+free desktop interfaces, provides timely notification of interesting
+events to a logged-in user. The project shall provide an environment
+conducive to teaching free software development tools and techniques.
+
+
+Installation
+------------
+Please see file INSTALL. (In brief: ./configure && make && make install)
+
+Configuration
+-------------
+syslog-notify needs a named pipe (or FIFO) to receive data from syslog.
+By default this is /var/spool/syslog-notify. To create it:
+mkfifo /var/spool/syslog-notify
+This command probably needs to be executed as root.
+
+To direct syslog to send messages to this FIFO, add the following line
+to its configuration file:
+*.*	|/var/spool/syslog-notify
+For standard syslogd, this can be appended to /etc/syslog.conf
+For rsyslogd, this line should go in a file by itself (called e.g.
+99-notify.conf) in /etc/rsyslog.d
+
+Invocation
+----------
+Run syslog-notify in a running X session. By default it will start in
+the background and run quietly. Use -n to remain in the foreground,
+and -f to specify an alternative FIFO to read from.
+
+syslog-notify will exit when the X session is closed.
+
+Contribution
+------------
+If you with to contribute to the project, please see the file HACKING.
+
+
+Last modified: 2 January 2009

@@ -1,0 +1,18 @@
+Contributing to syslog-notify (2 January 2009)
+==============================================
+
+Compiling a git pull
+--------------------
+syslog-notify uses the GNU build system. configure and related scripts
+are automatically generated at release time and thus not stored in the
+git repository. Thus they will need to be generated if you wish to compile
+the sources from git.
+
+Information on the GNU build system is available at
+http://www.gnu.org/software/autoconf/manual/autoconf.html
+and
+http://www.gnu.org/software/automake/manual/automake.html
+You will need to have autoconf, automake, and autoheader installed. Then
+run:
+autoreconf --install
+in the top-level directory (i.e. the one with configure.ac)
