@@ -1,7 +1,0 @@
-Debianize
-
-Filter control characters, other "bad" from messages
-
-Remove daemonizing possibility?
-
-If messages pileup, they are no longer timely...how to handle?
