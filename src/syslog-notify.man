@@ -1,0 +1,44 @@
+.TH SYSLOG\-NOTIFY 1 "6 March 2010" "syslog-notify 0.1" "User Commands"
+.SH NAME
+syslog\-notify \- direct syslog messages to notification windows
+
+.SH SYNOPSIS
+.B syslog-notify [ \-n ] [ \-f
+.I fifoname
+.B ]
+
+.SH DESCRIPTION
+.B syslog-notify
+reads messages from a named pipe (normally placed there by
+.BR syslog (8)
+or a similar daemon) and displays them to the user via the desktop notification system.
+By default, it runs in the background and exits when the notification system is no longer available, typically when the user has logged out.
+
+.SH OPTIONS
+.TP
+.BI \-n
+No background; stay running as a foreground process.
+.TP
+.BI \-f \ fifoname
+Read messages from
+.I fifoname
+(default is /var/spool/syslog-notify).
+.BR syslog (8)
+must be configured to send messages to this named pipe, and it must exist on startup.
+
+.SH FILES
+.TP
+.I /var/spool/syslog-notify
+Default named pipe to read messages from.
+
+.SH AUTHOR
+Jonathan Niehof, <jtniehof at gmail.com>
+
+.SH "SEE ALSO"
+.BR mkfifo (1)
+and either
+.BR rsyslog.conf (5)
+or
+.BR syslog.conf (5)
+.br
+http://jtniehof.github.com/syslog-notify/
