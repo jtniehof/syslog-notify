@@ -1,0 +1,14 @@
+aclocal.m4
+autom4te.cache
+build-aux
+config.h
+config.log
+config.status
+Makefile
+src/.deps
+src/Makefile
+src/Makefile.in
+src/syslog-notify
+stamp-h1
+*.o
+*~
