@@ -2,7 +2,7 @@
  *notification system
  *
  *  This file is part of syslog-notify.
- *  Copyright 2009 syslog-notify project (see file AUTHORS)
+ *  Copyright 2009-2010 syslog-notify project (see file AUTHORS)
  *
  *  syslog-notify is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -286,12 +286,7 @@ int main(int argc, char* argv[]) {
     fprintf(stderr,"FIFO name was %s.\n",fifoname);
     exit(2);
   }
-  if((wrfd=open(fifoname,O_WRONLY,0)) == -1) {
-    perror("Unable to open FIFO for write.");
-    fprintf(stderr,"FIFO name was %s.\n",fifoname);
-    cleanup();
-    exit(6);
-  }
+  wrfd=open(fifoname,O_WRONLY,0);
 
   /*Clear the FIFO of pending messages*/
   while((n_read=read(fd,buffer,PIPE_BUF))>0)
@@ -353,10 +348,14 @@ int main(int argc, char* argv[]) {
 
   /*Loop on the FIFO*/
   while((n_read=read(fd,buffer,PIPE_BUF))>=0) {
-    buffer[n_read]='\0';
-    if(!daemon)
-      fprintf(stderr,"%s",buffer);
-    ProcessBuffer(buffer);
+    if(n_read) {
+      buffer[n_read]='\0';
+      if(!daemon)
+	fprintf(stderr,"%s",buffer);
+      ProcessBuffer(buffer);
+    }
+    else
+      sleep(1); /*EOF; wait for a writer*/
   }
   cleanup();
   return 0;
