@@ -2,7 +2,7 @@
  *notification system
  *
  *  This file is part of syslog-notify.
- *  Copyright 2009-2010 syslog-notify project (see file AUTHORS)
+ *  Copyright 2009-2011 syslog-notify project (see file AUTHORS)
  *
  *  syslog-notify is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -66,7 +66,15 @@ void SendMessage(const char* title,const char* message) {
     close(fd);
     return;
   }
+#ifdef NOTIFY_CHECK_VERSION
+#if NOTIFY_CHECK_VERSION(0,7,0)
+  notification=notify_notification_new(title,message,NULL);
+#else
   notification=notify_notification_new(title,message,NULL,NULL);
+#endif
+#else
+  notification=notify_notification_new(title,message,NULL,NULL);
+#endif
   notify_notification_set_timeout(notification,NOTIFY_EXPIRES_DEFAULT);
   notify_notification_set_urgency(notification,NOTIFY_URGENCY_NORMAL);
   notify_notification_set_hint_string(notification,"x-canonical-append",
