@@ -79,6 +79,8 @@ void SendMessage(const char* title,const char* message) {
   notify_notification_set_urgency(notification,NOTIFY_URGENCY_NORMAL);
   notify_notification_set_hint_string(notification,"x-canonical-append",
 				      "allowed");
+  notify_notification_set_hint_string(notification,"append",
+				      "allowed");
   if(!notify_notification_show(notification,&error)) {
     if(error) {
       /*TODO: actually handle errors!
