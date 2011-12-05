@@ -269,7 +269,7 @@ void cleanup() {
 
 int main(int argc, char* argv[]) {
   const char* fifoname=DEFAULT_FIFO;
-  int c,n_read,wrfd;
+  int c,n_read;
   int daemon=1;
   char buffer[PIPE_BUF+1]; /*Always room for a "guard" null*/
 
