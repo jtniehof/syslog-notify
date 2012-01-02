@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <libnotify/notify.h>
 #define DEFAULT_FIFO "/var/spool/syslog-notify"
@@ -223,7 +224,13 @@ void ProcessBuffer(char buffer[PIPE_BUF+1]) {
   char *start, *end;
   /*Message title, and message itself*/
   char title[PIPE_BUF+1], message[PIPE_BUF+1];
+  static time_t last_msg=0;
+  time_t now;
+  int flood_mode=0;
 
+  now=time(NULL);
+  if ((now-last_msg) < 5)
+    flood_mode=1;
   start=buffer;
   do {
     /*Break on a line*/
@@ -237,9 +244,14 @@ void ProcessBuffer(char buffer[PIPE_BUF+1]) {
     title[PIPE_BUF]='\0';
     message[PIPE_BUF]='\0';
 
-    SendMessage(title,message);
+    if (!flood_mode)
+      SendMessage(title,message);
+    else {
+      SendMessage(title,message);
+    }
     start=end+1;
   } while((end-buffer < PIPE_BUF) && *start != '\0');
+  last_msg=now;
 }
 
 /*Signal handler
