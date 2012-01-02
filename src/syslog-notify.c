@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 #include <libnotify/notify.h>
 #define DEFAULT_FIFO "/var/spool/syslog-notify"
@@ -224,13 +223,27 @@ int ProcessBuffer(char buffer[PIPE_BUF+1]) {
   char *start, *end;
   /*Message title, and message itself*/
   static char title[PIPE_BUF+1], message[PIPE_BUF+1];
-  static time_t last_msg=0;
-  time_t now;
+  static char abbrev[PIPE_BUF+1]; /*Abbreviated messages for floods*/
+  int abbrev_used, abbrev_size, this_used;
+  int msg_count, size;
   int flood_mode=0;
 
-  now=time(NULL);
-  if ((now-last_msg) < 5)
+  /*Find number of waiting messages*/
+  msg_count=0;
+  start=buffer;
+  do {
+    end=strchr(start, '\n');
+    if(end) {
+      start=end+1;
+      msg_count++;
+    }
+  } while(end);
+
+  if (msg_count>2){
     flood_mode=1;
+    abbrev_used=0;
+    abbrev_size = PIPE_BUF / msg_count - 1; /*Size of abbreviated messages*/
+  }
   start=buffer;
   do {
     /*Break on a line. Buffer is null-terminated by caller*/
@@ -246,12 +259,32 @@ int ProcessBuffer(char buffer[PIPE_BUF+1]) {
 
     if (!flood_mode)
       SendMessage(title,message);
-    else {
-      SendMessage(title,message);
+    else { /*Copy as much as will fit in abbreviation buffer*/
+      size=strlen(title);
+      if(size > abbrev_size)
+	size = abbrev_size;
+      strncpy(abbrev+abbrev_used,title,size);
+      this_used=size;
+      if(this_used + 3 < abbrev_size) {
+	abbrev[abbrev_used+this_used] = ':';
+	this_used++;
+	abbrev[abbrev_used+this_used] = ' ';
+	this_used++;
+	size = strlen(message);
+	if(size + this_used > abbrev_size)
+	  size = abbrev_size - this_used;
+	strncpy(abbrev+abbrev_used+this_used,
+		message, size);
+	this_used+=size;
+      }
+      abbrev[abbrev_used+this_used] = '\n';
+      this_used++;
+      abbrev_used+=this_used;
     }
     start=end+1;
   } while((end-buffer < PIPE_BUF) && *start != '\0');
-  last_msg=now;
+  if(flood_mode)
+    SendMessage("syslog-notify (flood)",abbrev);
   return(start-buffer);
 }
 
