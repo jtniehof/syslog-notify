@@ -217,9 +217,9 @@ void ParseLine(char* line,
 /*Processes a buffer of message(s) from syslog
  *Sends to the notification daemon
  *Input: pointer to the message buffer
- *Returns: nothing
+ *Returns: number of characters processed from the buffer
  */
-void ProcessBuffer(char buffer[PIPE_BUF+1]) {
+int ProcessBuffer(char buffer[PIPE_BUF+1]) {
   /*Start/end of a line from syslog*/
   char *start, *end;
   /*Message title, and message itself*/
@@ -233,12 +233,12 @@ void ProcessBuffer(char buffer[PIPE_BUF+1]) {
     flood_mode=1;
   start=buffer;
   do {
-    /*Break on a line*/
+    /*Break on a line. Buffer is null-terminated by caller*/
     end=strchr(start,'\n');
     if(end)
       *end='\0';
     else
-      end=strchr(start,'\0');
+      break; /*In the middle of a line*/
 
     ParseLine(start,title,PIPE_BUF,message,PIPE_BUF);
     title[PIPE_BUF]='\0';
@@ -252,6 +252,7 @@ void ProcessBuffer(char buffer[PIPE_BUF+1]) {
     start=end+1;
   } while((end-buffer < PIPE_BUF) && *start != '\0');
   last_msg=now;
+  return(start-buffer);
 }
 
 /*Signal handler
@@ -281,7 +282,7 @@ void cleanup() {
 
 int main(int argc, char* argv[]) {
   const char* fifoname=DEFAULT_FIFO;
-  int c,n_read;
+  int c,n_read,n_processed,n_remain;
   int daemon=1;
   char buffer[PIPE_BUF+1]; /*Always room for a "guard" null*/
 
@@ -369,12 +370,21 @@ int main(int argc, char* argv[]) {
   }
 
   /*Loop on the FIFO*/
-  while((n_read=read(fd,buffer,PIPE_BUF))>=0) {
+  n_remain = 0;
+  while((n_read=read(fd,buffer+n_remain,PIPE_BUF-n_remain))>=0) {
     if(n_read) {
+      n_read += n_remain;
       buffer[n_read]='\0';
       if(!daemon)
 	fprintf(stderr,"%s",buffer);
-      ProcessBuffer(buffer);
+      n_processed=ProcessBuffer(buffer);
+      if(n_processed<n_read)
+	{
+	  n_remain = n_read-n_processed;
+	  memmove(buffer, buffer+n_processed, n_remain);
+	}
+      else
+	n_remain = 0;
     }
     else
       sleep(1); /*EOF; wait for a writer*/
