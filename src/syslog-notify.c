@@ -223,7 +223,7 @@ int ProcessBuffer(char buffer[PIPE_BUF+1]) {
   /*Start/end of a line from syslog*/
   char *start, *end;
   /*Message title, and message itself*/
-  char title[PIPE_BUF+1], message[PIPE_BUF+1];
+  static char title[PIPE_BUF+1], message[PIPE_BUF+1];
   static time_t last_msg=0;
   time_t now;
   int flood_mode=0;
