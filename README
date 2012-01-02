@@ -1,4 +1,4 @@
-syslog-notify 0.1
+syslog-notify 0.2
 =================
 
 As the name implies, syslog-notify takes messages from the syslog logging

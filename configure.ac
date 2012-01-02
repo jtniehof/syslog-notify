@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.64])
-AC_INIT([syslog-notify], [0.1], [jtniehof@gmail.com])
+AC_INIT([syslog-notify], [0.2], [jtniehof@gmail.com])
 AC_CONFIG_SRCDIR([src/syslog-notify.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign dist-bzip2 no-dist-gzip])

@@ -1,4 +1,4 @@
-.TH SYSLOG\-NOTIFY 1 "6 March 2010" "syslog-notify 0.1" "User Commands"
+.TH SYSLOG\-NOTIFY 1 "2 January 2012" "syslog-notify 0.2" "User Commands"
 .SH NAME
 syslog\-notify \- direct syslog messages to notification windows
 

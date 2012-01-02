@@ -2,7 +2,7 @@
  *notification system
  *
  *  This file is part of syslog-notify.
- *  Copyright 2009-2011 syslog-notify project (see file AUTHORS)
+ *  Copyright 2009-2012 syslog-notify project (see file AUTHORS)
  *
  *  syslog-notify is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

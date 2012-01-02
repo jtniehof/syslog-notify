@@ -1,0 +1,8 @@
+syslog-notify 0.2
+  * Create man page
+  * Add optional flood detection
+  * Fix case where the user running syslog-notify did not have access to pipe
+  * Fix compilation for later versions of libnotify (thanks Samuli Suominen)
+  * Fix case where a single message was split across reads from the pipe
+
+-- Jon Niehof <jtniehof@gmail.com>  Mon 02 Jan 2012 13:13:00 -0700
