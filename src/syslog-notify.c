@@ -35,6 +35,8 @@
  *Closing this is a signal to terminate
  */
 int fd=0,wrfd=0;
+/*Abbreviate messages if more than this per pipe read*/
+int flood_count=INT_MAX;
 
 /*Explains command line options
  *Called if can't parse options given
@@ -49,6 +51,9 @@ void PrintUsage(int argc, char* argv[]) {
     fprintf(stderr,
 	    "\t-f fifoname: Get syslog data from fifoname, default\n\t\t%s \n",
 	    DEFAULT_FIFO);
+    fprintf(stderr,
+	    "\t-c count: Enable flood detection if read more than count messages\n"
+	    "\t\tDefault disabled.\n");
   }
 }
 
@@ -239,7 +244,7 @@ int ProcessBuffer(char buffer[PIPE_BUF+1]) {
     }
   } while(end);
 
-  if (msg_count>2){
+  if (msg_count>=flood_count){
     flood_mode=1;
     abbrev_used=0;
     abbrev_size = PIPE_BUF / msg_count - 1; /*Size of abbreviated messages*/
@@ -322,13 +327,18 @@ int main(int argc, char* argv[]) {
   memset(buffer,'\0',PIPE_BUF+1);
   
   /*Process options*/
-  while((c=getopt(argc,argv,"f:n")) != -1) {
+  while((c=getopt(argc,argv,"c:f:n")) != -1) {
     switch (c) {
     case 'n':
       daemon=0;
       break;
     case 'f':
       fifoname=optarg;
+      break;
+    case 'c':
+      flood_count=atoi(optarg);
+      if(flood_count<2)
+	flood_count=INT_MAX;
       break;
     default:
       PrintUsage(argc,argv);

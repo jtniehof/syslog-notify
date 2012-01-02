@@ -5,6 +5,8 @@ syslog\-notify \- direct syslog messages to notification windows
 .SH SYNOPSIS
 .B syslog-notify [ \-n ] [ \-f
 .I fifoname
+.B ] [ \-c
+.I count
 .B ]
 
 .SH DESCRIPTION
@@ -25,6 +27,12 @@ Read messages from
 (default is /var/spool/syslog-notify).
 .BR syslog (8)
 must be configured to send messages to this named pipe, and it must exist on startup.
+.TP
+.BI \-c \ count
+Enable flood detection. If more than
+.I count
+messages are waiting on a read from the pipe, they will be abbreviated and sent
+as a single notification. (Flood detection is disabled by default.)
 
 .SH FILES
 .TP
