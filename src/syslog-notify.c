@@ -232,8 +232,9 @@ int ProcessBuffer(char buffer[PIPE_BUF+1]) {
   char *start, *end;
   /*Message title, and message itself*/
   static char title[PIPE_BUF+1], message[PIPE_BUF+1];
-  static char abbrev[PIPE_BUF+1]; /*Abbreviated messages for floods*/
-  int abbrev_used, abbrev_size, this_used;
+  static char combined[PIPE_BUF+1]; /*Combined messages for floods*/
+  char* next_combined; /*where next character will go in combined buffer*/
+  static char* combined_end=combined+PIPE_BUF; /*End of combined buffer*/
   int msg_count, size;
   int flood_mode=0;
 
@@ -250,8 +251,7 @@ int ProcessBuffer(char buffer[PIPE_BUF+1]) {
 
   if (msg_count>=flood_count){
     flood_mode=1;
-    abbrev_used=0;
-    abbrev_size = PIPE_BUF / msg_count - 1; /*Size of abbreviated messages*/
+    next_combined=combined;
   }
   start=buffer;
   do {
@@ -268,32 +268,34 @@ int ProcessBuffer(char buffer[PIPE_BUF+1]) {
 
     if (!flood_mode)
       SendMessage(title,message);
-    else { /*Copy as much as will fit in abbreviation buffer*/
+    else {
+      /*Combined buffer is as big as pipe read buffer.
+       *Cutting out timetags, so it *should* all fit, but check
+       */
       size=strlen(title);
-      if(size > abbrev_size)
-	size = abbrev_size;
-      strncpy(abbrev+abbrev_used,title,size);
-      this_used=size;
-      if(this_used + 3 < abbrev_size) {
-	abbrev[abbrev_used+this_used] = ':';
-	this_used++;
-	abbrev[abbrev_used+this_used] = ' ';
-	this_used++;
-	size = strlen(message);
-	if(size + this_used > abbrev_size)
-	  size = abbrev_size - this_used;
-	strncpy(abbrev+abbrev_used+this_used,
-		message, size);
-	this_used+=size;
+      if (next_combined+size < combined_end) {
+	strncpy(next_combined,title,size);
+	next_combined+=size;
+	if(next_combined+2 < combined_end) {
+	  strncpy(next_combined,": ",2);
+	  next_combined+=2;
+	  size=strlen(message);
+	  if(next_combined+size < combined_end) {
+	    strncpy(next_combined,message,size);
+	    next_combined+=size;
+	    if(next_combined+1 < combined_end) {
+	      *next_combined='\n';
+	      next_combined++;
+	    }
+	  }
+	}
       }
-      abbrev[abbrev_used+this_used] = '\n';
-      this_used++;
-      abbrev_used+=this_used;
+      *next_combined='\0'; /*always space for a null*/
     }
     start=end+1;
   } while((end-buffer < PIPE_BUF) && *start != '\0');
   if(flood_mode)
-    SendMessage("syslog-notify (flood)",abbrev);
+    SendMessage("syslog-notify (flood)",combined);
   return(start-buffer);
 }
 
