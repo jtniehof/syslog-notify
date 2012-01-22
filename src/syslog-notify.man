@@ -38,7 +38,10 @@ as a single notification. (Flood detection is disabled by default.)
 Wait
 .I waittime
 seconds between successive reads of the pipe. This makes flood detection more
-likely to trigger, as it gives time for messages to build up.
+likely to trigger, as it gives time for messages to build up. Using this option
+will, of course, decrease the timeliness of messages by up to
+.I waittime
+seconds.
 (By default, messages are read as soon as ready.)
 
 .SH FILES
