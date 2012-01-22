@@ -13,19 +13,21 @@ AC_PROG_CC
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([errno.h fcntl.h limits.h signal.h stdio.h stdlib.h string.h unistd.h], [],
+AC_MSG_ERROR([Required header files missing--are development packages installed?]))
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_FUNC_FORK
-AC_CHECK_FUNCS([memset strchr])
+AC_CHECK_FUNCS([memset strchr sleep],[],
+AC_MSG_ERROR([Needed function missing from C library. This should not happen.]))
 
 # Check for libnotify/pkgconfig
-PKG_CHECK_MODULES([NOTIFY],[libnotify])
-AC_SUBST(NOTIFY_CFLAGS)
-AC_SUBST(NOTIFY_LIBS)
+PKG_CHECK_MODULES([libnotify],[libnotify])
+AC_SUBST(libnotify_CFLAGS)
+AC_SUBST(libnotify_LIBS)
 
 
 # Instantiation macros
