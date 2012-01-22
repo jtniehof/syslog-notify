@@ -46,7 +46,8 @@ int flood_count=INT_MAX;
 void PrintUsage(int argc, char* argv[]) {
   if (argc>=1) {
     fprintf(stderr,"%s: Sends syslog messages to Desktop Notifications via libnotify\n",argv[0]);
-    fprintf(stderr,"Usage: %s [-n] [-f fifoname]\n",argv[0]);
+    fprintf(stderr,"Usage: %s [-n] [-f fifoname] [-c count] [-w waittime]\n",
+	    argv[0]);
     fprintf(stderr,"\t-n: Do not daemonize, but stay as foreground process\n");
     fprintf(stderr,
 	    "\t-f fifoname: Get syslog data from fifoname, default\n\t\t%s \n",
@@ -54,6 +55,9 @@ void PrintUsage(int argc, char* argv[]) {
     fprintf(stderr,
 	    "\t-c count: Enable flood detection if read more than count messages\n"
 	    "\t\tDefault disabled.\n");
+    fprintf(stderr,
+	    "\t-w waittime: How long (seconds) to wait between sucessive reads of fifo.\n"
+	    "\t\tDefault zero.\n");
   }
 }
 
@@ -323,11 +327,13 @@ int main(int argc, char* argv[]) {
   int c,n_read,n_processed,n_remain;
   int daemon=1;
   char buffer[PIPE_BUF+1]; /*Always room for a "guard" null*/
+  /*How long to wait between checks of the pipe*/
+  int wait_time=0;
 
   memset(buffer,'\0',PIPE_BUF+1);
   
   /*Process options*/
-  while((c=getopt(argc,argv,"c:f:n")) != -1) {
+  while((c=getopt(argc,argv,"c:f:nw:")) != -1) {
     switch (c) {
     case 'n':
       daemon=0;
@@ -339,6 +345,11 @@ int main(int argc, char* argv[]) {
       flood_count=atoi(optarg);
       if(flood_count<2)
 	flood_count=INT_MAX;
+      break;
+    case 'w':
+      wait_time=atoi(optarg);
+      if(wait_time<0)
+	wait_time=0;
       break;
     default:
       PrintUsage(argc,argv);
@@ -428,9 +439,11 @@ int main(int argc, char* argv[]) {
 	}
       else
 	n_remain = 0;
+      if(wait_time)
+	sleep(wait_time);
     }
     else
-      sleep(1); /*EOF; wait for a writer*/
+      sleep(wait_time?wait_time:1); /*EOF; wait for a writer*/
   }
   cleanup();
   return 0;

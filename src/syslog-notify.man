@@ -1,4 +1,4 @@
-.TH SYSLOG\-NOTIFY 1 "2 January 2012" "syslog-notify 0.2" "User Commands"
+.TH SYSLOG\-NOTIFY 1 "22 January 2012" "syslog-notify 0.3beta" "User Commands"
 .SH NAME
 syslog\-notify \- direct syslog messages to notification windows
 
@@ -33,6 +33,13 @@ Enable flood detection. If more than
 .I count
 messages are waiting on a read from the pipe, they will be abbreviated and sent
 as a single notification. (Flood detection is disabled by default.)
+.TP
+.BI \-w \ waittime
+Wait
+.I waittime
+seconds between successive reads of the pipe. This makes flood detection more
+likely to trigger, as it gives time for messages to build up.
+(By default, messages are read as soon as ready.)
 
 .SH FILES
 .TP
