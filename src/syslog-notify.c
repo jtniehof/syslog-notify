@@ -37,6 +37,8 @@
 int fd=0,wrfd=0;
 /*Abbreviate messages if more than this per pipe read*/
 int flood_count=INT_MAX;
+/* If 1, try to detect a message urgency level */
+int urgency = 0;
 
 /*Explains command line options
  *Called if can't parse options given
@@ -56,9 +58,31 @@ void PrintUsage(int argc, char* argv[]) {
 	    "\t-c count: Enable flood detection if read more than count messages\n"
 	    "\t\tDefault disabled.\n");
     fprintf(stderr,
+	    "\t-u: Set notification urgency based on a message keywords\n");
+    fprintf(stderr,
 	    "\t-w waittime: How long (seconds) to wait between sucessive reads of fifo.\n"
 	    "\t\tDefault zero.\n");
   }
+}
+
+/* Try to detect a message urgency based on the keyword list. This
+ * approach is a copy of a method used in the Vim's syntax for the
+ * /var/log/messages file. */
+int GetMessageUrgency(const char *message) {
+	static char *error_keywords[] = {
+		"fatal", "error", "errors", "failed", "failure"
+	};
+	int i;
+
+	if(!urgency) /* urgency detection was not enabled */
+		return NOTIFY_URGENCY_NORMAL;
+
+	for(i = 0; i < sizeof(error_keywords) / sizeof(char*); i++) {
+		if(strcasestr(message, error_keywords[i]))
+			return NOTIFY_URGENCY_CRITICAL;
+	}
+
+	return NOTIFY_URGENCY_NORMAL;
 }
 
 /*Sends a single message to the notification daemon
@@ -85,7 +109,7 @@ void SendMessage(const char* title,const char* message) {
   notification=notify_notification_new(title,message,NULL,NULL);
 #endif
   notify_notification_set_timeout(notification,NOTIFY_EXPIRES_DEFAULT);
-  notify_notification_set_urgency(notification,NOTIFY_URGENCY_NORMAL);
+  notify_notification_set_urgency(notification, GetMessageUrgency(message));
   notify_notification_set_hint_string(notification,"x-canonical-append",
 				      "allowed");
   notify_notification_set_hint_string(notification,"append",
@@ -335,7 +359,7 @@ int main(int argc, char* argv[]) {
   memset(buffer,'\0',PIPE_BUF+1);
   
   /*Process options*/
-  while((c=getopt(argc,argv,"c:f:nw:")) != -1) {
+  while((c=getopt(argc,argv,"c:f:nuw:")) != -1) {
     switch (c) {
     case 'n':
       daemon=0;
@@ -352,6 +376,9 @@ int main(int argc, char* argv[]) {
       wait_time=atoi(optarg);
       if(wait_time<0)
 	wait_time=0;
+      break;
+    case 'u':
+      urgency = 1;
       break;
     default:
       PrintUsage(argc,argv);
